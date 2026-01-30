@@ -23,7 +23,13 @@ def chat_view(request):
         user = User.objects.filter(is_superuser=True).first()
         if not user:
             # Create a default user if none exists
-            user = User.objects.create_user(username='demo', email='demo@lia.com', password='demo', role='admin')
+            user, created = User.objects.get_or_create(
+                username='demo',
+                defaults={'email': 'demo@lia.com', 'role': 'admin'}
+            )
+            if created:
+                user.set_password('demo')
+                user.save()
     
     session = ChatSession.objects.filter(user=user).order_by('-created_at').first()
     if not session:
