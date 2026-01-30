@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import DocumentForm
-from .models import Document
+from .forms import DocumentForm, LearnedKnowledgeForm
+from .models import Document, LearnedKnowledge
 from .services import DocumentProcessor, VectorStoreService
 import os
 import shutil
@@ -53,4 +53,20 @@ def upload_document(request):
         form = DocumentForm()
     
     documents = Document.objects.all().order_by('-uploaded_at')
-    return render(request, 'knowledge_base/upload.html', {'form': form, 'documents': documents})
+    learned_knowledge = LearnedKnowledge.objects.all().order_by('-created_at')
+    
+    return render(request, 'knowledge_base/upload.html', {
+        'form': form, 
+        'documents': documents,
+        'learned_knowledge': learned_knowledge
+    })
+
+def delete_knowledge(request, pk):
+    from django.shortcuts import get_object_or_404
+    knowledge = get_object_or_404(LearnedKnowledge, pk=pk)
+    
+    if request.method == 'POST':
+        knowledge.delete()
+        messages.success(request, "Conhecimento removido com sucesso!")
+        
+    return redirect('upload_document')

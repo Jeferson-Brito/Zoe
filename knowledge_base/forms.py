@@ -4,9 +4,20 @@ from .models import Document
 class DocumentForm(forms.ModelForm):
     class Meta:
         model = Document
-        fields = ['file', 'filename', 'visibility']
+        fields = ['file', 'visibility']
         widgets = {
-            'filename': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do Documento'}),
             'file': forms.FileInput(attrs={'class': 'form-control'}),
             'visibility': forms.Select(attrs={'class': 'form-control'})
+        }
+
+from .models import LearnedKnowledge
+
+class LearnedKnowledgeForm(forms.ModelForm):
+    class Meta:
+        model = LearnedKnowledge
+        fields = ['title', 'content', 'is_active']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }

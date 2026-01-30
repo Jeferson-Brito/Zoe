@@ -2,6 +2,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from knowledge_base.services import VectorStoreService
 from .models import ChatMessage
+from knowledge_base.models import LearnedKnowledge
 import os
 
 class ChatService:
@@ -34,15 +35,22 @@ class ChatService:
         # If we had 'customer', we would filter by 'customer' (public)
         
         try:
+            # DB Retrieval
+            learned = LearnedKnowledge.objects.filter(is_active=True).order_by('-created_at')[:5]
+            learned_text = "\n".join([f"- {l.content}" for l in learned])
+            
+            # Vector Retrieval
             results = self.vector_store.similarity_search(message_text, k=3, filter=filter_criteria)
+            rag_text = ""
             if results:
-                context_text = "\n\n".join([doc.page_content for doc in results])
-                sources = "\n".join(set([doc.metadata.get('source', 'Desconhecido') for doc in results]))
-            else:
-                context_text = "Nenhum documento relevante encontrado para o seu perfil de acesso."
+                rag_text = "\n\n".join([doc.page_content for doc in results])
+                
+            context_text = f"MEMÓRIA:\n{learned_text}\n\nDOCUMENTOS:\n{rag_text}"
+            if not learned_text and not rag_text:
+                context_text = "Nenhum documento relevante encontrado."
         except Exception as e:
             context_text = ""
-            print(f"Vector search error: {e}")
+            print(f"Retrieval error: {e}")
 
         # 3. Prompt
         system_prompt = f"""Você é a LIA, assistente virtual da IKLI Tecnologia.
@@ -132,23 +140,17 @@ class ChatService:
         # 5. Save AI message
         ChatMessage.objects.create(session=session, role='ai', content=ai_text)
         
-        # 6. [MEMORY] Self-Correction / Learning (Simple Implementation)
-        # If user message allows it, we save it as a "User Interaction" context
-        # In a production app, we would use a second LLM call to extract "Facts".
-        # For now, we save raw user input if it looks informative (length > 10)
+        # 6. [MEMORY] Save to Database
         try:
-             # Heuristic: If user says "Eu sou...", "Meu nome é...", "A regra é..."
              triggers = ["eu sou", "meu nome", "a regra", "o importante", "lembre-se", "mudei", "agora é"]
              if len(message_text) > 10 and any(t in message_text.lower() for t in triggers):
-                 # Save as a memory segment
-                 memory_metadata = {
-                     'source': 'interaction_memory', 
-                     'session_id': str(session.id),
-                     'type': 'user_fact',
-                     'visibility': 'internal' # Default visibility
-                 }
-                 self.vector_store.add_text(f"Fato aprendido com usuário: {message_text}", memory_metadata)
-                 print(f"MEMORY SAVED: {message_text}")
+                 LearnedKnowledge.objects.create(
+                     title=f"Aprendizado (Chat {str(session.id)[:8]})",
+                     content=message_text,
+                     source='chat',
+                     created_by=session.user
+                 )
+                 print(f"MEMORY SAVED TO DB: {message_text}")
         except Exception as e:
             print(f"Memory Save Error: {e}")
 
