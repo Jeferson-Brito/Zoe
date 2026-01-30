@@ -441,6 +441,18 @@
                 // Remove loading
                 loadingDiv.remove();
 
+                if (data.session_title) {
+                    // Update header title
+                    document.querySelector('.chat-title').textContent = data.session_title;
+
+                    // Update sidebar item
+                    // Find session item by ID
+                    const sidebarTitle = document.querySelector(`.session-item[onclick*="${sessionId}"] .session-title`);
+                    if (sidebarTitle) {
+                        sidebarTitle.textContent = data.session_title;
+                    }
+                }
+
                 if (data.response) {
                     addMessage('assistant', data.response);
                 } else if (data.error) {

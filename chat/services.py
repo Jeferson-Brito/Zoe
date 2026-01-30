@@ -73,7 +73,7 @@ class ChatService:
             print(f"Retrieval error: {e}")
 
         # 3. Prompt
-        system_prompt = f"""Você é a LIA, assistente virtual da IKLI Tecnologia.
+        system_prompt = f"""Você é a Zoe, assistente virtual da IKLI Tecnologia.
         Sua missão é atuar como consultor digital oficial da empresa para equipe interna, franqueados e clientes.
         
         REGRAS CRÍTICAS:
@@ -159,7 +159,25 @@ class ChatService:
             ai_text = f"ERRO DETALHADO: {str(e)}"
 
         # 5. Save AI message
-        # 4. Save AI message
         ChatMessage.objects.create(session=session, role='ai', content=ai_text)
+        
+        # 6. [TITLE] Auto-generate title if it's a new conversation
+        try:
+            # Check if title is default 'Nova Conversa' (or similar) and we have enough context
+            if session.title in ["Nova Conversa", "New Chat"] or session.messages.count() <= 4:
+                # Use a specific prompt for titling
+                title_prompt = f"Gere um título extremamente curto (máximo 4 palavras) para esta conversa baseada na mensagem: '{message_text}'. Responda APENAS o título, sem aspas."
+                
+                # We reuse the LLM instance
+                from langchain_core.messages import HumanMessage
+                title_response = self.llm.invoke([HumanMessage(content=title_prompt)])
+                new_title = title_response.content.strip().replace('"', '').replace("'", "")
+                
+                if new_title and len(new_title) < 50:
+                    session.title = new_title
+                    session.save()
+                    print(f"TITLE UPDATED: {new_title}")
+        except Exception as e:
+            print(f"Title Generation Error: {e}")
 
         return ai_text

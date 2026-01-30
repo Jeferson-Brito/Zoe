@@ -122,7 +122,8 @@ def api_chat_message(request):
     try:
         service = ChatService()
         response_text = service.chat(session, message_text)
-        return JsonResponse({'response': response_text})
+        session.refresh_from_db()
+        return JsonResponse({'response': response_text, 'session_title': session.title})
     except Exception as e:
         import traceback
         traceback.print_exc()
