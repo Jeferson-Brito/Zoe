@@ -297,9 +297,9 @@
             <div class="sessions-list" id="sessionsList">
                 {% for sess in all_sessions %}
                 <div class="session-item {% if sess.id == session.id %}active{% endif %}"
-                    onclick="loadSession({{ sess.id }})">
+                    onclick="loadSession('{{ sess.id }}')">
                     <span class="session-title">{{ sess.title }}</span>
-                    <button class="delete-btn" onclick="deleteSession(event, {{ sess.id }})">🗑️</button>
+                    <button class="delete-btn" onclick="deleteSession(event, '{{ sess.id }}')">🗑️</button>
                 </div>
                 {% endfor %}
             </div>
