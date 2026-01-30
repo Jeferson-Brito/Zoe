@@ -314,9 +314,9 @@
             <div class="messages-container" id="messagesContainer">
                 {% if messages %}
                 {% for msg in messages %}
-                <div class="message {{ msg.sender }}">
+                <div class="message {% if msg.role == 'user' %}user{% else %}assistant{% endif %}">
                     <div class="message-header">
-                        {% if msg.sender == 'user' %}Você{% else %}Zoe{% endif %}
+                        {% if msg.role == 'user' %}Você{% else %}Zoe{% endif %}
                     </div>
                     <div>{{ msg.content|linebreaks }}</div>
                 </div>
