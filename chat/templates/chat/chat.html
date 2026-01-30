@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat Zoe{% endblock %}
+
+{% block extra_head %}
+<style>
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        overflow: hidden;
+    }
+
+    .messages-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        scroll-behavior: smooth;
+    }
+
+    .message {
+        display: flex;
+        gap: 1.25rem;
+        max-width: 85%;
+        opacity: 0;
+        animation: slideIn 0.4s ease forwards;
+        transform: translateY(20px);
+    }
+
+    @keyframes slideIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message.user {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+    }
+
+    .message.ai {
+        align-self: flex-start;
+    }
+
+    .avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        font-size: 1.2rem;
+        transition: transform 0.2s;
+    }
+
+    .avatar:hover {
+        transform: scale(1.1);
+    }
+
+    .user .avatar {
+        background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+        color: white;
+    }
+
+    .ai .avatar {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+
+    .bubble {
+        padding: 1.25rem;
+        border-radius: 18px;
+        line-height: 1.6;
+        position: relative;
+        white-space: pre-wrap;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        font-size: 1rem;
+    }
+
+    .user .bubble {
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+    }
+
+    .ai .bubble {
+        background: rgba(255, 255, 255, 0.85);
+        color: var(--text-main);
+        border-bottom-left-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .input-area {
+        padding: 2rem;
+        background: transparent;
+        display: flex;
+        gap: 15px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    #message-input {
+        flex: 1;
+        padding: 1rem 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 30px;
+        font-family: inherit;
+        resize: none;
+        height: 60px;
+        outline: none;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        transition: all 0.3s;
+        backdrop-filter: blur(5px);
+        font-size: 1rem;
+    }
+
+    #message-input:focus {
+        background: white;
+        box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15);
+        border-color: var(--primary);
+    }
+
+    .btn-send {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-send:hover {
+        transform: scale(1.05) rotate(-10deg);
+        background: var(--primary-light);
+    }
+
+    .typing-indicator {
+        display: none;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-left: 4rem;
+        margin-bottom: 1.5rem;
+        font-style: italic;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 0.5;
+        }
+
+        50% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0.5;
+        }
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="messages-area" id="messages-area">
+        {% for msg in messages %}
+        <div class="message {{ msg.role }}">
+            <div class="avatar">
+                <i class="fa-solid {% if msg.role == 'user' %}fa-user{% else %}fa-robot{% endif %}"></i>
+            </div>
+            <div class="bubble" id="msg-{{ forloop.counter }}"></div>
+            <script>
+                // Render markdown for history
+                (function () {
+                    const text = `{{ msg.content|escapejs }}`;
+                    const el = document.getElementById('msg-{{ forloop.counter }}');
+                    if ("{{ msg.role }}" === "ai") {
+                        if (typeof marked !== 'undefined') {
+                            el.innerHTML = marked.parse(text);
+                        } else {
+                            el.innerText = text; // Fallback
+                            console.error("Marked not loaded");
+                        }
+                    } else {
+                        el.innerText = text;
+                    }
+                })();
+            </script>
+        </div>
+        {% endfor %}
+
+        <div class="typing-indicator" id="typing-indicator">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Zoe está escrevendo...
+        </div>
+
+        <div style="text-align: center; font-size: 0.75rem; color: #94a3b8; margin-top: 1rem;">
+            A Zoe é uma inteligência artificial e pode cometer erros. Verifique informações críticas nos documentos
+            oficiais.
+        </div>
+    </div>
+
+    <div class="input-area">
+        <textarea id="message-input" placeholder="Digite sua pergunta..." onkeydown="handleEnter(event)"></textarea>
+        <button onclick="sendMessage()" class="btn-send">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+    const sessionId = "{{ session.id }}";
+    const messagesArea = document.getElementById('messages-area');
+    const input = document.getElementById('message-input');
+    const indicator = document.getElementById('typing-indicator');
+
+    function scrollToBottom() {
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    scrollToBottom();
+
+    function handleEnter(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    }
+
+    async function sendMessage() {
+        const text = input.value.trim();
+        if (!text) return;
+
+        // Add User Message (User text is plain)
+        appendMessage('user', text);
+        input.value = '';
+        input.disabled = true;
+
+        // Show indicator
+        indicator.style.display = 'block';
+        scrollToBottom();
+
+        try {
+            const response = await fetch('/chat/api/send/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    message: text
+                })
+            });
+
+            const data = await response.json();
+
+            // Hide indicator
+            indicator.style.display = 'none';
+
+            if (data.error) {
+                input.disabled = false;
+                input.focus();
+                appendMessage('ai', "Erro: " + data.error);
+            } else {
+                const isError = data.response.startsWith("ERRO") || data.response.startsWith("Erro");
+
+                if (isError) {
+                    appendMessage('ai', data.response);
+                    input.disabled = false;
+                    input.focus();
+                } else {
+                    appendMessage('ai', data.response, true, () => {
+                        input.disabled = false;
+                        input.focus();
+                    });
+                }
+            }
+        } catch (e) {
+            indicator.style.display = 'none';
+            input.disabled = false;
+            appendMessage('ai', "Erro de conexão. Tente novamente.");
+        }
+    }
+
+    function appendMessage(role, text, animate = false, onComplete = null) {
+        const div = document.createElement('div');
+        div.className = `message ${role}`;
+
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        avatar.innerHTML = `<i class="fa-solid ${role === 'user' ? 'fa-user' : 'fa-robot'}"></i>`;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+
+        div.appendChild(avatar);
+        div.appendChild(bubble);
+
+        // Insert before indicator
+        messagesArea.insertBefore(div, indicator);
+        scrollToBottom();
+
+        if (role === 'ai') {
+            // For AI, parse Markdown
+            if (animate) {
+                // Improved Animation: Don't show raw markdown.
+                // Show a blinking cursor or empty while "thinking" (simulated by typing delay)
+                // OR stream the raw text but use a pre-element style?
+                // Better approach for Markdown: Render the MD incrementally? No, that breaks tags.
+                // Standard approach: Type raw text, then swap. 
+                // BUT user complained "It stays like this".
+                // Fix: Parse MD at the END of typeWriter.
+
+                let index = 0;
+                const speed = 5; // Faster typing
+
+                function typeWriter() {
+                    if (index < text.length) {
+                        // While typing, show raw text but formatted as pre-wrap
+                        // This allows user to see content appearing.
+                        // We avoid parsing MD on every char because it breaks partial tags (e.g. **Bo...)
+                        bubble.innerText += text.charAt(index);
+                        index++;
+                        scrollToBottom();
+                        setTimeout(typeWriter, speed);
+                    } else {
+                        // Animation done, REPLACE raw text with Rendered HTML
+                        bubble.innerHTML = marked.parse(text);
+                        scrollToBottom();
+                        if (onComplete) onComplete();
+                    }
+                }
+                typeWriter();
+            } else {
+                // Static (history)
+                if (typeof marked !== 'undefined') {
+                    bubble.innerHTML = marked.parse(text);
+                } else {
+                    bubble.innerText = text;
+                }
+                if (onComplete) onComplete();
+            }
+        } else {
+            // User message is plain text
+            bubble.innerText = text;
+            if (onComplete) onComplete();
+        }
+    }
+</script>
+{% endblock %}

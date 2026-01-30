@@ -1,0 +1,14 @@
+Django>=5.0
+langchain>=0.1.0
+langchain-openai
+langchain-google-genai
+chromadb
+pypdf
+python-docx
+openpyxl
+python-dotenv
+tiktoken
+sentence-transformers
+whitenoise
+gunicorn
+psycopg2-binary
