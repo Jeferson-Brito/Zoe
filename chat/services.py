@@ -169,7 +169,6 @@ class ChatService:
                 title_prompt = f"Gere um título extremamente curto (máximo 4 palavras) para esta conversa baseada na mensagem: '{message_text}'. Responda APENAS o título, sem aspas."
                 
                 # We reuse the LLM instance
-                from langchain_core.messages import HumanMessage
                 title_response = self.llm.invoke([HumanMessage(content=title_prompt)])
                 new_title = title_response.content.strip().replace('"', '').replace("'", "")
                 
