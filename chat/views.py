@@ -27,7 +27,7 @@ def chat_view(request, session_id=None):
                 user.save()
     
     # Get all user sessions
-    all_sessions = ChatSession.objects.filter(user=user).order_by('-updated_at')
+    all_sessions = ChatSession.objects.filter(user=user).order_by('-created_at')
     
     # Get or create current session
     if session_id:
@@ -95,7 +95,7 @@ def list_sessions_api(request):
         if not user:
             user = User.objects.get(username='demo')
     
-    sessions = ChatSession.objects.filter(user=user).order_by('-updated_at')
+    sessions = ChatSession.objects.filter(user=user).order_by('-created_at')
     
     data = [{
         'id': s.id,
