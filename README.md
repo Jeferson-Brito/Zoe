@@ -66,22 +66,25 @@ Acesse http://127.0.0.1:8000/
 
 ## 🗄️ Banco de Dados
 
-O projeto suporta dois tipos de banco:
+O projeto usa **Supabase PostgreSQL** exclusivamente.
 
-### SQLite (Padrão - Desenvolvimento)
-```env
-USE_SUPABASE=False
-```
+### Configuração do Banco
 
-### Supabase PostgreSQL (Produção)
+Configure as credenciais no arquivo `.env`:
+
 ```env
-USE_SUPABASE=True
 DB_NAME=postgres
 DB_USER=postgres
 DB_PASSWORD=sua_senha
 DB_HOST=db.xxx.supabase.co
 DB_PORT=5432
 ```
+
+Para obter as credenciais:
+1. Crie uma conta no [Supabase](https://supabase.com)
+2. Crie um novo projeto
+3. Vá em **Project Settings → Database**
+4. Copie a connection string e configure no `.env`
 
 ## 📚 Tecnologias
 
