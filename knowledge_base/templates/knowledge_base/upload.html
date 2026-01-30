@@ -1,77 +1,377 @@
-{% extends 'base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
 
-{% block title %}Base de Conhecimento{% endblock %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - Zoe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block content %}
-<div style="max-width: 800px; margin: 0 auto;">
-    <div
-        style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem;">
-        <h3>Adicionar Documento</h3>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #2d2d2d;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
 
+        .header {
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #fff;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: #3a3a3a;
+            color: #e0e0e0;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #4a4a4a;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 40px;
+        }
+
+        .section {
+            background: #252525;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .upload-area {
+            border: 2px dashed #4a4a4a;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: #2d2d2d;
+            margin-bottom: 20px;
+        }
+
+        .upload-area.drag-over {
+            border-color: #4a9eff;
+            background: #2a3a4a;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: #a0a0a0;
+            margin-bottom: 12px;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #4a9eff;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .file-input-label:hover {
+            background: #3a8eef;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #c0c0c0;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: #3a3a3a;
+            border: 1px solid #4a4a4a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+
+        .upload-btn {
+            padding: 12px 32px;
+            background: #4a9eff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .upload-btn:hover:not(:disabled) {
+            background: #3a8eef;
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .documents-list {
+            margin-top: 30px;
+        }
+
+        .document-item {
+            background: #2d2d2d;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .document-info {
+            flex: 1;
+        }
+
+        .document-name {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .document-meta {
+            font-size: 13px;
+            color: #808080;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.processed {
+            background: #2d5f2d;
+            color: #7bff7b;
+        }
+
+        .status-badge.pending {
+            background: #5f5f2d;
+            color: #ffff7b;
+        }
+
+        .messages {
+            margin-bottom: 24px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .message.success {
+            background: #2d5f2d;
+            color: #7bff7b;
+        }
+
+        .message.error {
+            background: #5f2d2d;
+            color: #ff7b7b;
+        }
+
+        .message.warning {
+            background: #5f5f2d;
+            color: #ffff7b;
+        }
+
+        .selected-file {
+            margin-top: 16px;
+            padding: 12px;
+            background: #3a3a3a;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .selected-file.show {
+            display: block;
+        }
+
+        .selected-file-name {
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>⚙️ Configurações</h1>
+        <a href="{% url 'chat' %}" class="back-btn">← Voltar ao Chat</a>
+    </div>
+
+    <div class="container">
         {% if messages %}
-        {% for message in messages %}
-        <div style="padding: 1rem; margin-bottom: 1rem; border-radius: 4px; 
-                    {% if message.tags == 'success' %}background: #dcfce7; color: #166534;
-                    {% elif message.tags == 'error' %}background: #fee2e2; color: #991b1b;
-                    {% else %}background: #fef9c3; color: #854d0e;{% endif %}">
-            {{ message }}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
         </div>
-        {% endfor %}
         {% endif %}
 
-        <form method="post" enctype="multipart/form-data" style="display: flex; gap: 10px; flex-direction: column;">
-            {% csrf_token %}
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Nome do Documento</label>
-                {{ form.filename }}
+        <div class="section">
+            <h2 class="section-title">📚 Base de Conhecimento</h2>
+
+            <form method="post" enctype="multipart/form-data" id="uploadForm">
+                {% csrf_token %}
+
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">Arraste um arquivo aqui ou clique para selecionar</div>
+                    <label for="fileInput" class="file-input-label">Escolher Arquivo</label>
+                    <input type="file" id="fileInput" name="file" class="file-input" accept=".pdf,.txt,.doc,.docx"
+                        required>
+                </div>
+
+                <div class="selected-file" id="selectedFile">
+                    <strong>Arquivo selecionado:</strong> <span class="selected-file-name" id="selectedFileName"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="visibility">Visibilidade do Documento</label>
+                    <select name="visibility" id="visibility" class="form-select" required>
+                        <option value="internal">🔒 Interno (Apenas equipe interna)</option>
+                        <option value="franchisee">👥 Franqueados (Equipe + Franqueados)</option>
+                        <option value="customer">🌐 Público (Todos)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="upload-btn" id="uploadBtn">
+                    Fazer Upload e Processar
+                </button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📑 Documentos Carregados ({{ documents.count }})</h2>
+
+            {% if documents %}
+            <div class="documents-list">
+                {% for doc in documents %}
+                <div class="document-item">
+                    <div class="document-info">
+                        <div class="document-name">{{ doc.file.name|slice:":50" }}</div>
+                        <div class="document-meta">
+                            Enviado em {{ doc.uploaded_at|date:"d/m/Y H:i" }} |
+                            Visibilidade: {{ doc.get_visibility_display }}
+                        </div>
+                    </div>
+                    <span class="status-badge {% if doc.processed %}processed{% else %}pending{% endif %}">
+                        {% if doc.processed %}✓ Processado{% else %}⏳ Pendente{% endif %}
+                    </span>
+                </div>
+                {% endfor %}
             </div>
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Visibilidade</label>
-                {{ form.visibility }}
-            </div>
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Arquivo (PDF, Docx)</label>
-                {{ form.file }}
-            </div>
-            <button type="submit" class="btn btn-primary" style="align-self: flex-start; margin-top: 1rem;">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Upload e Processar
-            </button>
-        </form>
+            {% else %}
+            <p style="color: #808080; text-align: center; padding: 40px;">
+                Nenhum documento carregado ainda. Faça upload do seu primeiro documento acima!
+            </p>
+            {% endif %}
+        </div>
     </div>
 
-    <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-        <h3>Documentos na Base</h3>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="text-align: left; border-bottom: 2px solid #e2e8f0;">
-                    <th style="padding: 0.75rem;">Nome</th>
-                    <th style="padding: 0.75rem;">Status</th>
-                    <th style="padding: 0.75rem;">Data</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for doc in documents %}
-                <tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 0.75rem;">{{ doc.filename }}</td>
-                    <td style="padding: 0.75rem;">
-                        {% if doc.processed %}
-                        <span
-                            style="background: #dcfce7; color: #166534; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.875rem;">Processado</span>
-                        {% else %}
-                        <span
-                            style="background: #fee2e2; color: #991b1b; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.875rem;">Pendente</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 0.75rem; color: #64748b;">{{ doc.uploaded_at|date:"d/m/Y H:i" }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="3" style="padding: 1rem; text-align: center; color: #64748b;">Nenhum documento
-                        encontrado.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-{% endblock %}
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const selectedFile = document.getElementById('selectedFile');
+        const selectedFileName = document.getElementById('selectedFileName');
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadBtn = document.getElementById('uploadBtn');
+
+        // File input change
+        fileInput.addEventListener('change', function () {
+            if (this.files.length > 0) {
+                selectedFileName.textContent = this.files[0].name;
+                selectedFile.classList.add('show');
+            }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', function (e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                selectedFileName.textContent = files[0].name;
+                selectedFile.classList.add('show');
+            }
+        });
+
+        // Form submission
+        uploadForm.addEventListener('submit', function () {
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Processando...';
+        });
+    </script>
+</body>
+
+</html>
