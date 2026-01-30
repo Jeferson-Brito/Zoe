@@ -1,7 +1,10 @@
 from django.db import models
 from django.conf import settings
 
+import uuid
+
 class Document(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     VISIBILITY_CHOICES = (
         ('internal', 'Interno'),
         ('franchisee', 'Franqueado'),
