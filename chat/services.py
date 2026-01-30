@@ -23,21 +23,41 @@ class ChatService:
             ChatMessage.objects.create(session=session, role='ai', content=error_msg)
             return error_msg
 
-        # 2. Retrieve Context
+        # 2. [MEMORY] Process Learning Triggers BEFORE Generating Response
+        new_knowledge = None
+        try:
+             # Expanded triggers including explicit commands
+             triggers = ["eu sou", "meu nome", "a regra", "o importante", "lembre-se", "mudei", "agora é", 
+                        "atualize", "aprenda", "salve", "nova informação", "informação adicional", "adicione", 
+                        "o horário", "forma de pagamento", "formas de pagamento", "possui"]
+             
+             if len(message_text) > 10 and any(t in message_text.lower() for t in triggers):
+                 LearnedKnowledge.objects.create(
+                     title=f"Aprendizado (Chat {str(session.id)[:8]})",
+                     content=message_text,
+                     source='chat',
+                     created_by=session.user
+                 )
+                 print(f"MEMORY SAVED TO DB: {message_text}")
+                 new_knowledge = message_text
+        except Exception as e:
+            print(f"Memory Save Error: {e}")
+
+        # 3. Retrieve Context
         user_role = session.user.role
         filter_criteria = None
         
-        # Access Logic:
-        # - Internal users see EVERYTHING (filter=None)
-        # - Franchisees see ONLY 'franchisee' visibility documents
         if user_role == 'franchisee':
             filter_criteria = {'visibility': 'franchisee'}
-        # If we had 'customer', we would filter by 'customer' (public)
         
         try:
             # DB Retrieval
             learned = LearnedKnowledge.objects.filter(is_active=True).order_by('-created_at')[:5]
             learned_text = "\n".join([f"- {l.content}" for l in learned])
+            
+            # If we just learned something, explicitly highlight it
+            if new_knowledge:
+                learned_text = f"!!! NOVA INFORMAÇÃO APRENDIDA AGORA (CONFIRME PARA O USUÁRIO) !!!\n- {new_knowledge}\n\n" + learned_text
             
             # Vector Retrieval
             results = self.vector_store.similarity_search(message_text, k=3, filter=filter_criteria)
@@ -62,6 +82,7 @@ class ChatService:
         3. NÃO tente ajudar com conhecimentos gerais ou externos se não estiver no contexto.
         4. NÃO INVENTE INFORMAÇÕES. É melhor dizer que não sabe do que inventar.
         5. Se a pergunta for um cumprimento (ex: "Oi", "Bom dia"), responda educadamente e se apresente.
+        6. SE O CONTEXTO TIVER 'NOVA INFORMAÇÃO APRENDIDA', CONFIRME QUE VAI LEMBRAR DISSO.
         
         CONTEXTO:
         {context_text}
@@ -138,20 +159,7 @@ class ChatService:
             ai_text = f"ERRO DETALHADO: {str(e)}"
 
         # 5. Save AI message
+        # 4. Save AI message
         ChatMessage.objects.create(session=session, role='ai', content=ai_text)
-        
-        # 6. [MEMORY] Save to Database
-        try:
-             triggers = ["eu sou", "meu nome", "a regra", "o importante", "lembre-se", "mudei", "agora é"]
-             if len(message_text) > 10 and any(t in message_text.lower() for t in triggers):
-                 LearnedKnowledge.objects.create(
-                     title=f"Aprendizado (Chat {str(session.id)[:8]})",
-                     content=message_text,
-                     source='chat',
-                     created_by=session.user
-                 )
-                 print(f"MEMORY SAVED TO DB: {message_text}")
-        except Exception as e:
-            print(f"Memory Save Error: {e}")
 
         return ai_text
